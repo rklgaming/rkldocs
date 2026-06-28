@@ -76,7 +76,7 @@
     color:var(--ink-3); padding:4px 8px; display:flex; align-items:center; gap:7px;
   }
   .nav-group > .label .dot{width:6px;height:6px;border-radius:50%}
-  .dot.eq{background:var(--steel)} .dot.fg{background:var(--ember)} .dot.cr{background:var(--arcane)} .dot.gn{background:var(--ink-3)} .dot.mg{background:#D86FD0}
+  .dot.eq{background:var(--steel)} .dot.fg{background:var(--ember)} .dot.cr{background:var(--arcane)} .dot.gn{background:var(--ink-3)} .dot.mg{background:#D86FD0} .dot.ef{background:#7FD957}
   .nav-group a{
     display:block; color:var(--ink-2); font-size:13.5px; padding:6px 9px; border-radius:7px; line-height:1.35;
     border-left:2px solid transparent;
@@ -104,7 +104,7 @@
   .pill{display:flex; align-items:center; gap:9px; border:1px solid var(--line-2); background:var(--bg-2); border-radius:10px; padding:9px 14px; font-size:13.5px; color:var(--ink-2)}
   .pill b{color:var(--ink); font-weight:600}
   .pill .sq{width:9px;height:9px;border-radius:2px;transform:rotate(45deg)}
-  .sq.eq{background:var(--steel)} .sq.fg{background:var(--ember)} .sq.cr{background:var(--arcane)} .sq.mg{background:#D86FD0}
+  .sq.eq{background:var(--steel)} .sq.fg{background:var(--ember)} .sq.cr{background:var(--arcane)} .sq.mg{background:#D86FD0} .sq.ef{background:#7FD957}
 
   /* ---------- Sections ---------- */
   section{scroll-margin-top:84px; padding-top:18px}
@@ -239,6 +239,12 @@
         <a href="#sp-skillcheck">rklskillcheck</a>
       </div>
       <div class="nav-group">
+        <div class="label"><span class="dot ef"></span>Effects &amp; FX</div>
+        <a href="#fx-overview">Overview</a>
+        <a href="#fx-status">rklstatuseffect</a>
+        <a href="#fx-particle">rklparticleseffect</a>
+      </div>
+      <div class="nav-group">
         <div class="label"><span class="dot gn"></span>Recipes</div>
         <a href="#recipes">Integration examples</a>
         <a href="#deploy">Hosting these docs</a>
@@ -262,6 +268,7 @@
           <span class="pill"><span class="sq fg"></span><b>rklforge</b> — upgrade · enchant · socket</span>
           <span class="pill"><span class="sq cr"></span><b>rklcrafting</b> — recipes &amp; XP</span>
           <span class="pill"><span class="sq mg"></span><b>spell system</b> — 5 magic resources</span>
+          <span class="pill"><span class="sq ef"></span><b>effects &amp; FX</b> — status &amp; particles</span>
         </div>
       </header>
 
@@ -732,6 +739,92 @@ for _, s in ipairs(skills) do print(s.categoryName, s.uid) end</code></pre>
           <tr><td>rklskillcheck:finish</td><td>client</td><td>Fired with the result (pass / fail)</td></tr>
         </table>
         <div class="note tip"><div class="h">Shared spell events</div><p>Across the suite, VFX use <code>rklskill:spawnParticles</code> / <code>rklskill:playParticles</code> / <code>rklskill:stopParticles</code>, and level syncing uses <code>rklspells:updateLevels</code>.</p></div>
+      </section>
+
+      <!-- ===================== EFFECTS & FX ===================== -->
+      <section id="fx-overview">
+        <h2>Effects &amp; FX</h2>
+        <p class="sub">Two shared layers used across combat and magic: a status-effect system (poison, burn, slow, blind, stun, freeze) with screen and world VFX, and a particle / damage-number layer that other resources fire to show hits and effects.</p>
+        <div class="note info"><div class="h">Shared by the suite</div><p>The FX layer handles <code>rkldamageped:victim</code> — the same event the equipment combos fire to damage NPCs and show floating numbers. Keep it running or combat visuals won't appear.</p></div>
+      </section>
+
+      <!-- rklstatuseffect -->
+      <section id="fx-status">
+        <h2 class="res-h2"><span class="dot ef" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklstatuseffect <span class="tag">poison · burn · stun…</span></h2>
+        <p class="sub">Applies timed status effects with optional damage-over-time plus screen and world particles. Built-in statuses: <code>burn</code>, <code>poison</code>, <code>slow</code>, <code>blind</code>, <code>stun</code>, <code>freeze</code> — add your own in <code>Config.Statuses</code>.</p>
+
+        <h3>Server exports</h3>
+        <div class="api srv" data-name="GiveStatus">
+          <div class="head"><span class="fn">GiveStatus(target, name, duration, damage)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Applies a status to a player from the server. <code>duration</code> is in <b>seconds</b> (default 5). Use it for traps, spells, poison weapons, etc.</p>
+          <table>
+            <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+            <tr><td>target</td><td class="t">number</td><td>player server id</td></tr>
+            <tr><td>name</td><td class="t">string</td><td>status key in <code>Config.Statuses</code></td></tr>
+            <tr><td>duration</td><td class="t">number</td><td>seconds (default 5)</td></tr>
+            <tr><td>damage</td><td class="t">number | false</td><td>per-tick damage; omit for config default, <code>false</code> for none</td></tr>
+          </table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>-- burn for 8 seconds, 5 damage per tick
+exports['rklstatuseffect']:GiveStatus(src, 'burn', 8, 5)</code></pre>
+        </div>
+        <div class="api srv" data-name="TakeStatus">
+          <div class="head"><span class="fn">TakeStatus(target, name)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Removes a status from a player.</p>
+          <table>
+            <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+            <tr><td>target</td><td class="t">number</td><td>player server id</td></tr>
+            <tr><td>name</td><td class="t">string</td><td>status to remove</td></tr>
+          </table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>exports['rklstatuseffect']:TakeStatus(src, 'burn')</code></pre>
+        </div>
+
+        <h3>Client exports</h3>
+        <div class="api cli" data-name="ApplyStatus">
+          <div class="head"><span class="fn">ApplyStatus(name, duration, damage)</span><span class="badge cli">Client</span></div>
+          <p class="desc">Applies a status to the local player. Same fallbacks as the event: omit <code>duration</code> / <code>damage</code> to use the config defaults; pass <code>false</code> for no damage.</p>
+          <table>
+            <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+            <tr><td>name</td><td class="t">string</td><td>status key</td></tr>
+            <tr><td>duration</td><td class="t">number?</td><td>seconds; nil = config default</td></tr>
+            <tr><td>damage</td><td class="t">number | false?</td><td>per-tick; nil = config default</td></tr>
+          </table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>exports['rklstatuseffect']:ApplyStatus('poison', 10, 3)</code></pre>
+        </div>
+        <div class="api cli" data-name="HasStatus">
+          <div class="head"><span class="fn">HasStatus(name)</span><span class="badge cli">Client</span></div>
+          <p class="desc">Returns whether the local player currently has a status.</p>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>active</td><td class="t">boolean</td><td></td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>if exports['rklstatuseffect']:HasStatus('freeze') then return end</code></pre>
+        </div>
+        <div class="api cli" data-name="RemoveStatus">
+          <div class="head"><span class="fn">RemoveStatus(name)</span><span class="badge cli">Client</span></div>
+          <p class="desc">Removes a status from the local player.</p>
+          <table><tr><th>Parameter</th><th>Type</th><th>Notes</th></tr><tr><td>name</td><td class="t">string</td><td>status to remove</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>exports['rklstatuseffect']:RemoveStatus('poison')</code></pre>
+        </div>
+
+        <h3>Event &amp; config</h3>
+        <p>You can also apply a status client-side via event — handy from another client script:</p>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>TriggerEvent('rklstatuseffect:status', 'slow', 6)   -- name + duration, config damage
+TriggerEvent('rklstatuseffect:status', 'blind')     -- name only, all config defaults</code></pre>
+        <p class="sub">Add or tune statuses in <code>Config.Statuses</code> (each entry has duration, damage, screen FX and optional <code>worldPtfx</code>). Other config: <code>Config.RenderDistance</code>, <code>Config.WaitStatus</code>, <code>Config.IdleWait</code>, and a built-in test command via <code>Config.CommandTest</code>.</p>
+      </section>
+
+      <!-- rklparticleseffect -->
+      <section id="fx-particle">
+        <h2 class="res-h2"><span class="dot ef" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklparticleseffect <span class="tag">particles · damage numbers</span></h2>
+        <p class="sub">The shared visual layer: plays attached particle effects on peds and shows floating damage numbers. It's event-driven (no exports) — other resources fire its events. Events use the <code>rklcharfx:</code> and <code>rkldamgeshow:</code> prefixes, plus the ped-damage handler.</p>
+        <table>
+          <tr><th>Event</th><th>Side</th><th>Does</th></tr>
+          <tr><td>rkldamageped:victim</td><td>server</td><td>Apply &amp; show damage on a ped (NPC); fired by combat scripts</td></tr>
+          <tr><td>rklcharfx:sync</td><td>server</td><td>Play a particle on the caster, synced to nearby players</td></tr>
+          <tr><td>rklcharfx:playLocal</td><td>client</td><td>Play a particle locally on a target ped</td></tr>
+          <tr><td>rkldamgeshow:start</td><td>client</td><td>Show a floating damage number above a target</td></tr>
+        </table>
+        <h4>Dealing ped damage (same call the combos use)</h4>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">client → server event</span><button class="copy">Copy</button></div><code>TriggerServerEvent('rkldamageped:victim', 'rklequipment:victim',
+    hitCoords, range, enemyNetId, damage)</code></pre>
+        <div class="note tip"><div class="h">No exports — just ensure it</div><p>Because it's event-driven, the folder name doesn't affect its API; just keep the resource started so its event handlers are live. It's a dependency for the equipment combat visuals and the spell VFX.</p></div>
       </section>
 
       <!-- ===================== RECIPES ===================== -->
