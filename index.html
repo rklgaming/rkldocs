@@ -76,7 +76,7 @@
     color:var(--ink-3); padding:4px 8px; display:flex; align-items:center; gap:7px;
   }
   .nav-group > .label .dot{width:6px;height:6px;border-radius:50%}
-  .dot.eq{background:var(--steel)} .dot.fg{background:var(--ember)} .dot.cr{background:var(--arcane)} .dot.gn{background:var(--ink-3)}
+  .dot.eq{background:var(--steel)} .dot.fg{background:var(--ember)} .dot.cr{background:var(--arcane)} .dot.gn{background:var(--ink-3)} .dot.mg{background:#D86FD0}
   .nav-group a{
     display:block; color:var(--ink-2); font-size:13.5px; padding:6px 9px; border-radius:7px; line-height:1.35;
     border-left:2px solid transparent;
@@ -104,7 +104,7 @@
   .pill{display:flex; align-items:center; gap:9px; border:1px solid var(--line-2); background:var(--bg-2); border-radius:10px; padding:9px 14px; font-size:13.5px; color:var(--ink-2)}
   .pill b{color:var(--ink); font-weight:600}
   .pill .sq{width:9px;height:9px;border-radius:2px;transform:rotate(45deg)}
-  .sq.eq{background:var(--steel)} .sq.fg{background:var(--ember)} .sq.cr{background:var(--arcane)}
+  .sq.eq{background:var(--steel)} .sq.fg{background:var(--ember)} .sq.cr{background:var(--arcane)} .sq.mg{background:#D86FD0}
 
   /* ---------- Sections ---------- */
   section{scroll-margin-top:84px; padding-top:18px}
@@ -230,6 +230,15 @@
         <a href="#cr-cmd">Commands &amp; data</a>
       </div>
       <div class="nav-group">
+        <div class="label"><span class="dot mg"></span>Spell System</div>
+        <a href="#spell-overview">Overview</a>
+        <a href="#sp-grimoire">rklgrimoire</a>
+        <a href="#sp-skillsystem">rklskillsystem</a>
+        <a href="#sp-spellmanage">rklspellmanage</a>
+        <a href="#sp-spellbook">rklspellbook</a>
+        <a href="#sp-skillcheck">rklskillcheck</a>
+      </div>
+      <div class="nav-group">
         <div class="label"><span class="dot gn"></span>Recipes</div>
         <a href="#recipes">Integration examples</a>
         <a href="#deploy">Hosting these docs</a>
@@ -244,14 +253,15 @@
 
       <!-- HERO -->
       <header class="hero">
-        <p class="eyebrow">Equipment · Forge · Crafting</p>
+        <p class="eyebrow">Gear · Forge · Crafting · Magic</p>
         <h1>RKL Suite — Developer Docs</h1>
-        <p class="lead">Three connected FiveM resources for RPG-style gear: wearable equipment with stats and durability, a forge for upgrades, enchants and sockets, and an XP-based crafting system. Runs on ESX Legacy, QBCore and Qbox through one auto-detecting bridge.</p>
+        <p class="lead">Connected FiveM resources for RPG servers: wearable gear with stats and durability, a forge for upgrades, enchants and sockets, an XP-based crafting system, and a full spell &amp; skill layer. Everything runs on ESX Legacy, QBCore and Qbox through auto-detecting bridges.</p>
         <div class="molten"></div>
         <div class="pills">
           <span class="pill"><span class="sq eq"></span><b>rklequipment</b> — gear, stats, combat</span>
           <span class="pill"><span class="sq fg"></span><b>rklforge</b> — upgrade · enchant · socket</span>
-          <span class="pill"><span class="sq cr"></span><b>crafting</b> — recipes &amp; XP</span>
+          <span class="pill"><span class="sq cr"></span><b>rklcrafting</b> — recipes &amp; XP</span>
+          <span class="pill"><span class="sq mg"></span><b>spell system</b> — 5 magic resources</span>
         </div>
       </header>
 
@@ -567,6 +577,163 @@ print(data.level, data.xp)</code></pre>
         </table>
       </section>
 
+      <!-- ===================== SPELL SYSTEM ===================== -->
+      <section id="spell-overview">
+        <h2>Spell System</h2>
+        <p class="sub">Five connected resources that add a magic / skill layer: a grimoire with spell XP and a hotbar, the skill engine that casts spells and tracks mana, spellbook items with unlocked-skill storage, a spell menu, and a cast-time skillcheck minigame. Each ships with its own framework bridge (ESX Legacy / QBCore / Qbox auto-detected) and most cast text lives in an open <code>language.lua</code>.</p>
+        <table>
+          <tr><th>Resource</th><th>Does</th><th>Exports</th></tr>
+          <tr><td>rklgrimoire</td><td>Spell XP, hotbar, spell upgrades</td><td><code>AddGrimoireXP</code> · <code>GetHotbarData</code></td></tr>
+          <tr><td>rklskillsystem</td><td>Cast skills, mana, damage, UI toggles</td><td>4 toggle exports</td></tr>
+          <tr><td>rklspellmanage</td><td>Spellbook items &amp; unlocked-skill storage (+ shop)</td><td><code>usebook</code> · <code>getUnlockedSkills</code></td></tr>
+          <tr><td>rklspellbook</td><td>Spell menu / permitted spells</td><td>callbacks &amp; events</td></tr>
+          <tr><td>rklskillcheck</td><td>Cast-time skillcheck minigame</td><td>events</td></tr>
+        </table>
+        <div class="note info"><div class="h">Optional integrations</div><p>Can read from an external skill tree via <code>Config.DevhubSkillTree</code> (the <code>devhub_skillTree</code> resource / <code>dh_skilltree</code> table). rklskillsystem can also gate access by job, by op-crime orgs (<code>Config.EnableOPCrime</code>), or by Discord roles.</p></div>
+      </section>
+
+      <!-- rklgrimoire -->
+      <section id="sp-grimoire">
+        <h2 class="res-h2"><span class="dot mg" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklgrimoire <span class="tag">XP · hotbar · upgrades</span></h2>
+        <p class="sub">Tracks each player's spell XP and the spell hotbar, and processes spell upgrades.</p>
+
+        <h3>Exports</h3>
+        <div class="api srv" data-name="AddGrimoireXP">
+          <div class="head"><span class="fn">AddGrimoireXP(target, amount)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Grants spell (grimoire) XP to a player. Use it to reward casting, quests or events.</p>
+          <table>
+            <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+            <tr><td>target</td><td class="t">number</td><td>player server id</td></tr>
+            <tr><td>amount</td><td class="t">number</td><td>XP to add</td></tr>
+          </table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>exports['rklgrimoire']:AddGrimoireXP(src, 50)</code></pre>
+        </div>
+        <div class="api cli" data-name="GetHotbarData">
+          <div class="head"><span class="fn">GetHotbarData()</span><span class="badge cli">Client</span></div>
+          <p class="desc">Returns the local player's current spell hotbar data — the slots and the spells bound to them.</p>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>hotbar</td><td class="t">table</td><td>current hotbar slots</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>local hotbar = exports['rklgrimoire']:GetHotbarData()</code></pre>
+        </div>
+
+        <h3>Callbacks &amp; events</h3>
+        <table>
+          <tr><th>Name</th><th>Kind</th><th>Does</th></tr>
+          <tr><td>grimoire:getPlayerData</td><td>callback</td><td>Fetch the player's grimoire record</td></tr>
+          <tr><td>grimoire:getLearnedSpells</td><td>callback</td><td>List the player's learned spells</td></tr>
+          <tr><td>rklgrimoire:serverUpgradeSpell</td><td>callback</td><td>Upgrade a spell (server-validated)</td></tr>
+          <tr><td>rklgrimoire:hotbarUpdated</td><td>event</td><td>Fires when the hotbar changes (UI listens)</td></tr>
+          <tr><td>rklgrimoire:showMagicNotify</td><td>event</td><td>Show a themed magic notification</td></tr>
+        </table>
+
+        <h3>Command</h3>
+        <table>
+          <tr><th>Command</th><th>Access</th><th>Does</th></tr>
+          <tr><td>/addxp &lt;id&gt; &lt;amount&gt;</td><td>ace <code>command.addxp</code></td><td>Add grimoire XP (console always allowed; ace set via <code>Config.AddXPAce</code>)</td></tr>
+        </table>
+      </section>
+
+      <!-- rklskillsystem -->
+      <section id="sp-skillsystem">
+        <h2 class="res-h2"><span class="dot mg" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklskillsystem <span class="tag">cast · mana · UI</span></h2>
+        <p class="sub">The skill engine — casting, mana, damage indicators and the spell hotbar UI. Its exports run on the <b>client</b> and let other scripts disable casting or hide the UI (cutscenes, downed states, safe zones).</p>
+
+        <h3>Exports</h3>
+        <div class="api cli" data-name="SetDisableSkills">
+          <div class="head"><span class="fn">SetDisableSkills(status)</span><span class="badge cli">Client</span></div>
+          <p class="desc">Enable or disable the player's ability to cast skills. Pass <code>true</code> to block casting, <code>false</code> to allow it again.</p>
+          <table><tr><th>Parameter</th><th>Type</th><th>Notes</th></tr><tr><td>status</td><td class="t">boolean</td><td><code>true</code> = casting disabled</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>exports['rklskillsystem']:SetDisableSkills(true)   -- during a cutscene
+exports['rklskillsystem']:SetDisableSkills(false)  -- restore</code></pre>
+        </div>
+        <div class="api cli" data-name="IsSkillsDisabled">
+          <div class="head"><span class="fn">IsSkillsDisabled()</span><span class="badge cli">Client</span></div>
+          <p class="desc">Returns whether casting is currently disabled.</p>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>disabled</td><td class="t">boolean</td><td></td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>if exports['rklskillsystem']:IsSkillsDisabled() then return end</code></pre>
+        </div>
+        <div class="api cli" data-name="SetUIHidden">
+          <div class="head"><span class="fn">SetUIHidden(status)</span><span class="badge cli">Client</span></div>
+          <p class="desc">Force-hide or show the spell hotbar UI. Pass <code>true</code> to hide it, <code>false</code> to bring it back.</p>
+          <table><tr><th>Parameter</th><th>Type</th><th>Notes</th></tr><tr><td>status</td><td class="t">boolean</td><td><code>true</code> = UI hidden</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>exports['rklskillsystem']:SetUIHidden(true)</code></pre>
+        </div>
+        <div class="api cli" data-name="IsUIHidden">
+          <div class="head"><span class="fn">IsUIHidden()</span><span class="badge cli">Client</span></div>
+          <p class="desc">Returns whether the spell hotbar UI is currently force-hidden.</p>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>hidden</td><td class="t">boolean</td><td></td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>local hidden = exports['rklskillsystem']:IsUIHidden()</code></pre>
+        </div>
+
+        <h3>Callback, command &amp; events</h3>
+        <table>
+          <tr><th>Name</th><th>Kind</th><th>Does</th></tr>
+          <tr><td>rklskillsystem:getPlayerData</td><td>callback</td><td>Fetch the player's skill data</td></tr>
+          <tr><td>/skillsystem</td><td>command</td><td>Open the skill manager UI (blocked while downed)</td></tr>
+          <tr><td>rklskillsystem:notify</td><td>event</td><td>Show a skill notification</td></tr>
+          <tr><td>rklskillsystem:showdamage</td><td>event</td><td>Show a damage indicator</td></tr>
+          <tr><td>rklskillsystem:enableusingskills / disableusingskills</td><td>event</td><td>Event-based toggle (same effect as the exports)</td></tr>
+        </table>
+        <h4>Config highlights</h4>
+        <p class="sub"><code>Config.Mana</code>, <code>Config.Skills</code>, <code>Config.Hotbar</code>, <code>Config.RequireWeapon</code>, <code>Config.DamageIndicator</code>, plus access gates <code>Config.AllowedJob</code> / <code>Config.AllowedOrgs</code> / <code>Config.EnableJobLock</code> / <code>Config.EnableOPCrime</code>.</p>
+      </section>
+
+      <!-- rklspellmanage -->
+      <section id="sp-spellmanage">
+        <h2 class="res-h2"><span class="dot mg" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklspellmanage <span class="tag">books · unlocks · shop</span></h2>
+        <p class="sub">Handles spellbook items and stores which skills a player has unlocked. Includes an optional ox_inventory shop for skillbooks.</p>
+
+        <h3>Exports</h3>
+        <div class="api srv" data-name="getUnlockedSkills">
+          <div class="head"><span class="fn">getUnlockedSkills(source)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Returns the list of skills a player has unlocked. With <code>Config.DevhubSkillTree</code> enabled it reads from the <code>dh_skilltree</code> table; otherwise from this resource's own storage.</p>
+          <table><tr><th>Parameter</th><th>Type</th><th>Notes</th></tr><tr><td>source</td><td class="t">number</td><td>player server id</td></tr></table>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>skills</td><td class="t">table</td><td>list of <code>{ uid, categoryName }</code>; empty if none</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>local skills = exports['rklspellmanage']:getUnlockedSkills(src)
+for _, s in ipairs(skills) do print(s.categoryName, s.uid) end</code></pre>
+        </div>
+        <div class="api cli" data-name="usebook">
+          <div class="head"><span class="fn">usebook(data, slot)</span><span class="badge cli">Client</span></div>
+          <p class="desc">ox_inventory item-use handler for a spellbook. It runs the standard item use, then checks the player's race/job against the book's metadata (framework auto-detected) before unlocking. Wire it as the item's use export.</p>
+          <table>
+            <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+            <tr><td>data</td><td class="t">table</td><td>ox_inventory item-use payload</td></tr>
+            <tr><td>slot</td><td class="t">number</td><td>inventory slot</td></tr>
+          </table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">ox_inventory/data/items — client.export</span><button class="copy">Copy</button></div><code>['spellbook_fire'] = {
+    label = 'Fire Spellbook',
+    client = { export = 'rklspellmanage.usebook' },
+}</code></pre>
+        </div>
+        <h4>Config highlights</h4>
+        <p class="sub"><code>Config.Abilities</code>, <code>Config.Command</code>, <code>Config.DevhubSkillTree</code>, <code>Config.EnableOxShopforSkillbook</code>, <code>Config.usingSkillbook</code>.</p>
+      </section>
+
+      <!-- rklspellbook -->
+      <section id="sp-spellbook">
+        <h2 class="res-h2"><span class="dot mg" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklspellbook <span class="tag">spell menu</span></h2>
+        <p class="sub">The spell menu — shows the spells a player is permitted to use and supports targeting other players. Driven by callbacks and an open event; it has no exports.</p>
+        <table>
+          <tr><th>Name</th><th>Kind</th><th>Does</th></tr>
+          <tr><td>rkl_spellbook:client:openSpellbook</td><td>event</td><td>Open the spell menu for the player</td></tr>
+          <tr><td>rkl_spellmenu:getPermittedSpells</td><td>callback</td><td>List spells the player may cast</td></tr>
+          <tr><td>rkl_spellmenu:getPlayers</td><td>callback</td><td>Nearby players for targeting</td></tr>
+        </table>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">client — open the menu</span><button class="copy">Copy</button></div><code>TriggerEvent('rkl_spellbook:client:openSpellbook')</code></pre>
+        <p class="sub">Open command is configurable via <code>Config.SpellMenuCommand</code>.</p>
+      </section>
+
+      <!-- rklskillcheck -->
+      <section id="sp-skillcheck">
+        <h2 class="res-h2"><span class="dot mg" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklskillcheck <span class="tag">cast minigame</span></h2>
+        <p class="sub">A cast-time skillcheck minigame. Other spell resources start it during a cast; the result decides whether the spell succeeds. No exports — it's event-driven.</p>
+        <table>
+          <tr><th>Event</th><th>Side</th><th>Does</th></tr>
+          <tr><td>rklskillcheck:startSpellMinigame</td><td>client</td><td>Begin the skillcheck for a cast</td></tr>
+          <tr><td>rklskillcheck:finish</td><td>client</td><td>Fired with the result (pass / fail)</td></tr>
+        </table>
+        <div class="note tip"><div class="h">Shared spell events</div><p>Across the suite, VFX use <code>rklskill:spawnParticles</code> / <code>rklskill:playParticles</code> / <code>rklskill:stopParticles</code>, and level syncing uses <code>rklspells:updateLevels</code>.</p></div>
+      </section>
+
       <!-- ===================== RECIPES ===================== -->
       <section id="recipes">
         <h2>Integration examples</h2>
@@ -594,6 +761,23 @@ end</code></pre>
         <pre data-lang="lua"><div class="bar"><span class="ttl">your quest script — server</span><button class="copy">Copy</button></div><code>-- on quest complete
 exports['rklforge']:GiveForgeReq(src, 'upgrade_stone', 5, 'Upgrade Stone')
 exports['rklforge']:GiveForgeCard(src, 'attack_card', 2)</code></pre>
+
+        <h3>Award spell XP on a cast</h3>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">your spell hook — server</span><button class="copy">Copy</button></div><code>exports['rklgrimoire']:AddGrimoireXP(src, 25)</code></pre>
+
+        <h3>Pause casting during a cutscene</h3>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">your cutscene script — client</span><button class="copy">Copy</button></div><code>exports['rklskillsystem']:SetDisableSkills(true)
+exports['rklskillsystem']:SetUIHidden(true)
+-- ...play cutscene...
+exports['rklskillsystem']:SetUIHidden(false)
+exports['rklskillsystem']:SetDisableSkills(false)</code></pre>
+
+        <h3>Gate a feature by unlocked skill</h3>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">your script — server</span><button class="copy">Copy</button></div><code>local skills = exports['rklspellmanage']:getUnlockedSkills(src)
+local hasFireball = false
+for _, s in ipairs(skills) do
+    if s.uid == 'fireball' then hasFireball = true break end
+end</code></pre>
       </section>
 
       <!-- DEPLOY -->
