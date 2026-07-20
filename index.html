@@ -76,7 +76,7 @@
     color:var(--ink-3); padding:4px 8px; display:flex; align-items:center; gap:7px;
   }
   .nav-group > .label .dot{width:6px;height:6px;border-radius:50%}
-  .dot.eq{background:var(--steel)} .dot.fg{background:var(--ember)} .dot.cr{background:var(--arcane)} .dot.gn{background:var(--ink-3)} .dot.mg{background:#D86FD0} .dot.ef{background:#7FD957}
+  .dot.eq{background:var(--steel)} .dot.fg{background:var(--ember)} .dot.cr{background:var(--arcane)} .dot.gn{background:var(--ink-3)} .dot.mg{background:#D86FD0} .dot.ef{background:#7FD957} .dot.ui{background:#E6B450}
   .nav-group a{
     display:block; color:var(--ink-2); font-size:13.5px; padding:6px 9px; border-radius:7px; line-height:1.35;
     border-left:2px solid transparent;
@@ -104,7 +104,7 @@
   .pill{display:flex; align-items:center; gap:9px; border:1px solid var(--line-2); background:var(--bg-2); border-radius:10px; padding:9px 14px; font-size:13.5px; color:var(--ink-2)}
   .pill b{color:var(--ink); font-weight:600}
   .pill .sq{width:9px;height:9px;border-radius:2px;transform:rotate(45deg)}
-  .sq.eq{background:var(--steel)} .sq.fg{background:var(--ember)} .sq.cr{background:var(--arcane)} .sq.mg{background:#D86FD0} .sq.ef{background:#7FD957}
+  .sq.eq{background:var(--steel)} .sq.fg{background:var(--ember)} .sq.cr{background:var(--arcane)} .sq.mg{background:#D86FD0} .sq.ef{background:#7FD957} .sq.ui{background:#E6B450}
 
   /* ---------- Sections ---------- */
   section{scroll-margin-top:84px; padding-top:18px}
@@ -245,6 +245,10 @@
         <a href="#fx-particle">rklparticleseffect</a>
       </div>
       <div class="nav-group">
+        <div class="label"><span class="dot ui"></span>HUD</div>
+        <a href="#ui-interface">rklinterface</a>
+      </div>
+      <div class="nav-group">
         <div class="label"><span class="dot gn"></span>Recipes</div>
         <a href="#recipes">Integration examples</a>
         <a href="#deploy">Hosting these docs</a>
@@ -269,6 +273,7 @@
           <span class="pill"><span class="sq cr"></span><b>rklcrafting</b> — recipes &amp; XP</span>
           <span class="pill"><span class="sq mg"></span><b>spell system</b> — 5 magic resources</span>
           <span class="pill"><span class="sq ef"></span><b>effects &amp; FX</b> — status &amp; particles</span>
+          <span class="pill"><span class="sq ui"></span><b>rklinterface</b> — HUD &amp; class build</span>
         </div>
       </header>
 
@@ -300,7 +305,21 @@ ensure es_extended      # or qb-core / qbx_core
 
 ensure rklequipment     # core — start first
 ensure rklforge         # AFTER equipment
-ensure crafting</code></pre>
+ensure rklcrafting
+
+# effects (needed for combat visuals & damage numbers)
+ensure rklparticleseffect
+ensure rklstatuseffect
+
+# spell system
+ensure rklgrimoire
+ensure rklskillsystem
+ensure rklspellmanage
+ensure rklspellbook
+ensure rklskillcheck
+
+# HUD
+ensure rklinterface</code></pre>
         <div class="note tip"><div class="h">awaken_coin on QBCore / Qbox</div><p>On ESX a custom <code>getAwakenCoin()</code> is used if present. On QBCore/Qbox the currency routes to an ox_inventory item named <code>awaken_coin</code> — either create that item, or set the currency in config to <code>money</code>, <code>bank</code>, or another item.</p></div>
       </section>
 
@@ -825,6 +844,55 @@ TriggerEvent('rklstatuseffect:status', 'blind')     -- name only, all config def
         <pre data-lang="lua"><div class="bar"><span class="ttl">client → server event</span><button class="copy">Copy</button></div><code>TriggerServerEvent('rkldamageped:victim', 'rklequipment:victim',
     hitCoords, range, enemyNetId, damage)</code></pre>
         <div class="note tip"><div class="h">No exports — just ensure it</div><p>Because it's event-driven, the folder name doesn't affect its API; just keep the resource started so its event handlers are live. It's a dependency for the equipment combat visuals and the spell VFX.</p></div>
+      </section>
+
+      <!-- ===================== INTERFACE / HUD ===================== -->
+      <section id="ui-interface">
+        <h2 class="res-h2"><span class="dot ui" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklinterface <span class="tag">HUD · class build · skill bar</span></h2>
+        <p class="sub">The player HUD: health, mana and stamina bars, the class/subclass build (max HP, MP, sprint speed), the equipped-skill bar, and a drag-to-move edit mode. Class comes from the <code>playerClass</code> state bag, and skills are read from the skill-tree tables.</p>
+
+        <h3>Export</h3>
+        <div class="api cli" data-name="isSpellActive">
+          <div class="head"><span class="fn">isSpellActive()</span><span class="badge cli">Client</span></div>
+          <p class="desc">Returns whether the local player is currently casting. Use it to block actions that shouldn't interrupt a cast.</p>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>casting</td><td class="t">boolean</td><td><code>true</code> while a cast is running</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>if exports['rklinterface']:isSpellActive() then return end</code></pre>
+        </div>
+
+        <h3>Callbacks</h3>
+        <table>
+          <tr><th>Callback</th><th>Returns</th><th>Does</th></tr>
+          <tr><td>rklinterface:getJobData</td><td>table | nil</td><td>Class XP and level (falls back to the <code>playerClass</code> state bag)</td></tr>
+          <tr><td>rklinterface:getUnlockedSkills</td><td>table</td><td>Unlocked active skills for the player's class</td></tr>
+          <tr><td>rklinterface:getUnlockedPassives</td><td>table</td><td>Unlocked passive skills and their rank stats</td></tr>
+        </table>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>local jobData = lib.callback.await('rklinterface:getJobData', false)
+print(jobData.level, jobData.currentClass)</code></pre>
+
+        <h3>Events</h3>
+        <table>
+          <tr><th>Event</th><th>Args</th><th>Does</th></tr>
+          <tr><td>rklinterface:updatexp</td><td>currentXP, nextXPNeeded</td><td>Update the XP bar</td></tr>
+          <tr><td>rklinterface:updatelvl</td><td>currentLevel</td><td>Update the level display</td></tr>
+          <tr><td>rklinterface:updatelvlxp</td><td>level, xp, nextXP</td><td>Update level and XP together</td></tr>
+          <tr><td>rklinterface:refreshskills</td><td>—</td><td>Recalculate the character build</td></tr>
+          <tr><td>rklinterface:forceRefreshHUD</td><td>—</td><td>Redraw the HUD icons</td></tr>
+          <tr><td>rklinterface:updatespell</td><td>—</td><td>Refresh the spell/skill bar</td></tr>
+          <tr><td>rklinterface:resetstat</td><td>—</td><td>Clear the cached stat icons</td></tr>
+          <tr><td>rklinterface:equipSkill</td><td>slot, skillId</td><td><b>Server</b> — equip a skill into a hotbar slot</td></tr>
+          <tr><td>rklinterface:gethpback</td><td>—</td><td><b>Server</b> — restore saved HP / mana on spawn</td></tr>
+        </table>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">server → client</span><button class="copy">Copy</button></div><code>TriggerClientEvent('rklinterface:updatelvlxp', src, 12, 340, 500)</code></pre>
+
+        <h3>Commands &amp; config</h3>
+        <table>
+          <tr><th>Command</th><th>Does</th></tr>
+          <tr><td>/hideui</td><td>Toggle the HUD on / off</td></tr>
+          <tr><td>/interface</td><td>Open edit mode to drag HUD elements</td></tr>
+        </table>
+        <p class="sub">Class stats live in <code>Config.BaseStatus</code> (base health, HP per level, and per-class modifiers for mage, priest, ranger, and more) and <code>Config.Abilities</code>. Database tables: <code>slv_player_job_points</code>, <code>slv_player_skills</code>, <code>slv_skills</code>, <code>slv_skill_trees</code>.</p>
+
+        <div class="note info"><div class="h">Class comes from a state bag</div><p>The HUD reads <code>LocalPlayer.state.playerClass</code> (and <code>playerSubclass</code>). Whatever sets the class — a class-select resource, for example — should set that state bag so the HUD picks it up.</p></div>
       </section>
 
       <!-- ===================== RECIPES ===================== -->
