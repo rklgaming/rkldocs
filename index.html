@@ -207,6 +207,8 @@
         <a href="#overview">Overview</a>
         <a href="#install">Install &amp; server.cfg</a>
         <a href="#naming">Resource names</a>
+        <a href="#connections">How they connect</a>
+        <a href="#database">Database &amp; SQL</a>
       </div>
       <div class="nav-group">
         <div class="label"><span class="dot eq"></span>rklequipment</div>
@@ -245,8 +247,11 @@
         <a href="#fx-particle">rklparticleseffect</a>
       </div>
       <div class="nav-group">
-        <div class="label"><span class="dot ui"></span>HUD</div>
+        <div class="label"><span class="dot ui"></span>Progression</div>
         <a href="#ui-interface">rklinterface</a>
+        <a href="#st-skilltree">rklskilltree</a>
+        <a href="#bd-binder">rklbinder</a>
+        <a href="#rp-repair">rklrepair</a>
       </div>
       <div class="nav-group">
         <div class="label"><span class="dot gn"></span>Recipes</div>
@@ -306,6 +311,9 @@ ensure es_extended      # or qb-core / qbx_core
 ensure rklequipment     # core — start first
 ensure rklforge         # AFTER equipment
 ensure rklcrafting
+ensure rklskilltree     # class XP / skill nodes
+ensure rklbinder        # card binder (uses forge_card)
+ensure rklrepair        # durability repair NPC
 
 # effects (needed for combat visuals & damage numbers)
 ensure rklparticleseffect
@@ -318,9 +326,23 @@ ensure rklspellmanage
 ensure rklspellbook
 ensure rklskillcheck
 
-# HUD
+# HUD (reads skilltree + forge)
 ensure rklinterface</code></pre>
-        <div class="note tip"><div class="h">awaken_coin on QBCore / Qbox</div><p>On ESX a custom <code>getAwakenCoin()</code> is used if present. On QBCore/Qbox the currency routes to an ox_inventory item named <code>awaken_coin</code> — either create that item, or set the currency in config to <code>money</code>, <code>bank</code>, or another item.</p></div>
+        <h3>Currency — pick what players pay with</h3>
+        <p>Costs that the scripts call "awaken coin" are not hard-wired to an item. Set <code>Config.RKLCurrency</code> in the resource's <code>config.lua</code> (an open file, editable under escrow) and the bridge routes every charge and balance check for you — same behaviour on ESX Legacy, QBCore and Qbox.</p>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">config.lua</span><button class="copy">Copy</button></div><code>Config.RKLCurrency = { type = 'item', item = 'awaken_coin' }  -- ox_inventory item
+-- Config.RKLCurrency = { type = 'money' }                     -- cash
+-- Config.RKLCurrency = { type = 'bank'  }                     -- bank balance
+-- Config.RKLCurrency = { type = 'account', account = 'black_money' }</code></pre>
+        <table>
+          <tr><th>type</th><th>ESX Legacy</th><th>QBCore / Qbox</th></tr>
+          <tr><td>item</td><td>ox_inventory item</td><td>ox_inventory item</td></tr>
+          <tr><td>money</td><td><code>getMoney()</code></td><td><code>money.cash</code></td></tr>
+          <tr><td>bank</td><td><code>getAccount('bank')</code></td><td><code>money.bank</code></td></tr>
+          <tr><td>account</td><td>named ESX account</td><td>named money type</td></tr>
+        </table>
+        <div class="note tip"><div class="h">Leaving it out is safe</div><p>If <code>Config.RKLCurrency</code> isn't defined, nothing changes: an ESX server's own <code>getAwakenCoin()</code> is used when it exists, otherwise the <code>awaken_coin</code> ox_inventory item. Defining it always wins, so your choice is honoured on every framework.</p></div>
+        <div class="note info"><div class="h">Per-shop currency in rklequipment</div><p>Equipment shops already choose their own currency with <code>currencyType</code> in <code>Config.Shops</code> — set it to <code>money</code>, <code>bank</code>, any ox_inventory item name, or <code>awaken_coin</code> to follow the <code>Config.RKLCurrency</code> setting above.</p></div>
       </section>
 
       <!-- NAMING -->
@@ -334,6 +356,97 @@ ensure rklinterface</code></pre>
           <tr><td>rklcrafting</td><td><code>rklcrafting:*</code> events &amp; callbacks</td></tr>
         </table>
         <div class="note info"><div class="h">All references are rkl</div><p>Every export, event, callback and cross-resource sync uses the <code>rkl</code> names above, matching the folders. NUI uses <code>GetParentResourceName()</code>, so the UI follows the folder name automatically. The database tables (<code>player_equipment</code>, <code>slv_crafting_data</code>) keep their original names so existing data is untouched.</p></div>
+      </section>
+
+      <!-- ===================== CONNECTIONS ===================== -->
+      <section id="connections">
+        <h2>How they connect</h2>
+        <p class="sub">The resources are independent but share three things: <b>exports</b> (direct calls), <b>events</b> (one-way messages), and <b>database tables</b>. This is the full dependency picture.</p>
+
+        <h3>Direct export calls</h3>
+        <table>
+          <tr><th>Caller</th><th>Calls</th><th>For</th><th>Required?</th></tr>
+          <tr><td>rklequipment</td><td><code>rklskilltree:GetJobLevel</code></td><td>Level gate on gear</td><td>Optional</td></tr>
+          <tr><td>rklinterface</td><td><code>rklforge:GetPlayerStatTotal</code></td><td>Cooldown / mana / skill-damage bonuses</td><td>Optional</td></tr>
+          <tr><td>rklforge</td><td><code>rklequipment:GetDefense</code>, <code>ApplyMagicDefense</code></td><td>Reading gear stats</td><td>Required</td></tr>
+          <tr><td>rklbinder</td><td>— (shares the <code>forge_card</code> item)</td><td>Storing forge cards in an album</td><td>Standalone</td></tr>
+          <tr><td>rklrepair</td><td>— (shares the <code>equipment</code> item)</td><td>Restoring durability</td><td>Standalone</td></tr>
+        </table>
+        <div class="note tip"><div class="h">Optional means optional</div><p>Where a call is marked optional, the caller checks the resource is running and falls back to <code>0</code> if it isn't — so you can ship a partial suite without console errors.</p></div>
+
+        <h3>Event flow</h3>
+        <table>
+          <tr><th>From</th><th>Event</th><th>To</th><th>Meaning</th></tr>
+          <tr><td>rklforge</td><td>rklequipment:updateCache</td><td>rklequipment</td><td>Gear changed — re-read metadata &amp; re-apply stats</td></tr>
+          <tr><td>rklskilltree</td><td>rklinterface:updatelvlxp</td><td>rklinterface</td><td>Class level / XP changed — refresh HUD</td></tr>
+          <tr><td>rklskilltree</td><td>rklinterface:refreshskills</td><td>rklinterface</td><td>Skills changed — recalculate the build</td></tr>
+          <tr><td>rklskilltree</td><td>rklinterface:resetstat</td><td>rklinterface</td><td>Clear cached stat icons</td></tr>
+          <tr><td>rklinterface</td><td>rklequipment:addedstats</td><td>rklequipment</td><td>Push HUD-side stat changes</td></tr>
+          <tr><td>rklequipment</td><td>rkldamageped:victim</td><td>rklparticleseffect</td><td>Damage an NPC &amp; show the number</td></tr>
+          <tr><td>rklequipment</td><td>rklstatuseffect:applyStatus</td><td>rklstatuseffect</td><td>Apply burn / poison / etc. on hit</td></tr>
+        </table>
+
+        <h3>Shared database tables</h3>
+        <table>
+          <tr><th>Table</th><th>Written by</th><th>Read by</th></tr>
+          <tr><td>player_equipment</td><td>rklequipment, rklforge</td><td>rklequipment, rklforge</td></tr>
+          <tr><td>slv_player_job_points</td><td>rklskilltree</td><td>rklskilltree, rklinterface</td></tr>
+          <tr><td>slv_player_skills</td><td>rklskilltree, rklinterface</td><td>rklskilltree, rklinterface</td></tr>
+          <tr><td>slv_skills / slv_skill_trees</td><td>rklskilltree</td><td>rklskilltree, rklinterface</td></tr>
+          <tr><td>slv_crafting_data</td><td>rklcrafting</td><td>rklcrafting</td></tr>
+        </table>
+
+        <h3>Optional integrations</h3>
+        <p>Three resources outside this suite are used when present: <code>rklzones</code> (safe zones), <code>rklcompanion</code> (pet detection) and <code>rklspawnmonster</code> (monster lookup). <code>rklskilltree</code> and <code>rklforge</code> are optional to each other in the same way.</p>
+        <p>Every one of these calls is wrapped, so a missing resource can never throw. You can also switch them off explicitly:</p>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">config.lua</span><button class="copy">Copy</button></div><code>Config.Integrations = {
+    ['rklzones']        = true,  -- fallback: never in a safe zone
+    ['rklcompanion']    = true,  -- fallback: not a companion
+    ['rklspawnmonster'] = true,  -- fallback: no monster
+    ['rklskilltree']    = true,  -- fallback: level 0
+}</code></pre>
+        <table>
+          <tr><th>Value</th><th>Behaviour</th></tr>
+          <tr><td>true</td><td>Use it, but only when the resource is actually started</td></tr>
+          <tr><td>false</td><td>Never call it — the fallback value is used</td></tr>
+          <tr><td>omitted</td><td>Same as true, so older configs keep working</td></tr>
+        </table>
+
+        <h3>Shared state bag</h3>
+        <p><code>LocalPlayer.state.playerClass</code> (and <code>playerSubclass</code>) is how the player's class travels between resources. rklskilltree sets it; rklinterface and rklequipment read it. It is framework-independent, so it behaves the same on ESX, QBCore and Qbox.</p>
+
+        <div class="note warn"><div class="h">Start order matters</div><p>rklforge writes to equipment metadata and rklinterface reads forge stats, so start <b>rklequipment</b> first, then <b>rklforge</b>, then the rest. The full order is in <a href="#install">Install &amp; server.cfg</a>.</p></div>
+      </section>
+
+      <!-- ===================== DATABASE ===================== -->
+      <section id="database">
+        <h2>Database &amp; SQL</h2>
+        <p class="sub">Import <code>rkl_suite.sql</code> once on your server database. Every statement is <code>IF NOT EXISTS</code>, so re-running it is safe and never deletes data.</p>
+
+        <table>
+          <tr><th>Table</th><th>Holds</th><th>Key</th></tr>
+          <tr><td>player_equipment</td><td>Equipped gear + full item JSON</td><td>identifier + slot</td></tr>
+          <tr><td>slv_crafting_data</td><td>Crafting level and XP</td><td>identifier</td></tr>
+          <tr><td>slv_player_job_points</td><td>Class XP, level, skill points</td><td>identifier + job_name</td></tr>
+          <tr><td>slv_skill_trees</td><td>One tree per class + saved layout</td><td>id</td></tr>
+          <tr><td>slv_skills</td><td>Every skill node and its unlock rules</td><td>id</td></tr>
+          <tr><td>slv_player_skills</td><td>Unlocked skills, rank, HUD slot</td><td>identifier + skill_id</td></tr>
+          <tr><td>slv_admin_xp_logs</td><td>Audit trail for admin XP grants</td><td>id</td></tr>
+          <tr><td>sl_binder</td><td>Card binder contents (JSON per player)</td><td>identifier</td></tr>
+        </table>
+
+        <h3>Character class columns</h3>
+        <p>The skill tree stores the class, sub-classes and rank on the character row. Run the block that matches your framework — the SQL file has both, with the QBCore/Qbox one commented out.</p>
+        <pre data-lang="cfg"><div class="bar"><span class="ttl">ESX Legacy</span><button class="copy">Copy</button></div><code>ALTER TABLE `users`
+    ADD COLUMN IF NOT EXISTS `class`       VARCHAR(64) DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS `sub_classes` TEXT        DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS `rank`        VARCHAR(8)  DEFAULT 'E';</code></pre>
+        <pre data-lang="cfg"><div class="bar"><span class="ttl">QBCore / Qbox</span><button class="copy">Copy</button></div><code>ALTER TABLE `players`
+    ADD COLUMN IF NOT EXISTS `class`       VARCHAR(64) DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS `sub_classes` TEXT        DEFAULT NULL,
+    ADD COLUMN IF NOT EXISTS `rank`        VARCHAR(8)  DEFAULT 'E';</code></pre>
+
+        <div class="note info"><div class="h">The identifier column</div><p>Scripts store whatever the bridge returns — the ESX identifier on ESX Legacy, the citizenid on QBCore/Qbox. Both fit <code>VARCHAR(64)</code>, so no schema change is needed per framework. Moving frameworks on the same database means old rows won't match, which is normal for any migration.</p></div>
       </section>
 
       <!-- ===================== EQUIPMENT ===================== -->
@@ -892,7 +1005,164 @@ print(jobData.level, jobData.currentClass)</code></pre>
         </table>
         <p class="sub">Class stats live in <code>Config.BaseStatus</code> (base health, HP per level, and per-class modifiers for mage, priest, ranger, and more) and <code>Config.Abilities</code>. Database tables: <code>slv_player_job_points</code>, <code>slv_player_skills</code>, <code>slv_skills</code>, <code>slv_skill_trees</code>.</p>
 
+        <div class="note info"><div class="h">Hunger &amp; thirst are framework-aware</div><p>On ESX the bars are driven by <code>esx_status</code>. On QBCore and Qbox those events never fire, so the HUD reads the same values from player metadata instead — via <code>hud:client:UpdateNeeds</code>, on player load, and with a slow poll as a catch-all. Starvation damage is left to the framework so it isn't applied twice.</p></div>
         <div class="note info"><div class="h">Class comes from a state bag</div><p>The HUD reads <code>LocalPlayer.state.playerClass</code> (and <code>playerSubclass</code>). Whatever sets the class — a class-select resource, for example — should set that state bag so the HUD picks it up.</p></div>
+      </section>
+
+      <!-- ===================== SKILL TREE ===================== -->
+      <section id="st-skilltree">
+        <h2 class="res-h2"><span class="dot ui" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklskilltree <span class="tag">class XP · skill nodes</span></h2>
+        <p class="sub">Class progression and the skill tree itself: XP and levels per class, skill points, node unlocking with rank-ups, sub-classes, and an in-game tree editor for admins. It feeds the HUD (<code>rklinterface</code>) and gates gear in <code>rklequipment</code>.</p>
+
+        <h3>Server exports</h3>
+
+        <div class="api srv" data-name="AddJobXP">
+          <div class="head"><span class="fn">AddJobXP(source, amount)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Grants class XP, handling level-ups and the HUD refresh automatically. Use it to reward quests, kills or events.</p>
+          <table>
+            <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+            <tr><td>source</td><td class="t">number</td><td>player server id</td></tr>
+            <tr><td>amount</td><td class="t">number</td><td>XP to add</td></tr>
+          </table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>exports['rklskilltree']:AddJobXP(src, 250)</code></pre>
+        </div>
+
+        <div class="api srv" data-name="GetJobLevel">
+          <div class="head"><span class="fn">GetJobLevel(source)</span><span class="badge srv">Server</span></div>
+          <p class="desc">The player's current level in their active class. This is what <code>rklequipment</code> uses to gate gear by <code>required_lvl</code>.</p>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>level</td><td class="t">number</td><td><code>1</code> if there is no record yet</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>local lvl = exports['rklskilltree']:GetJobLevel(src) or 0
+if lvl &lt; item.required_lvl then return end</code></pre>
+        </div>
+
+        <div class="api srv" data-name="GetJobStats">
+          <div class="head"><span class="fn">GetJobStats(source)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Full progression snapshot for the active class — level, XP, unspent skill points, and the XP needed for the next level.</p>
+          <table>
+            <tr><th>Returns</th><th>Type</th><th>Notes</th></tr>
+            <tr><td>level</td><td class="t">number</td><td>current class level</td></tr>
+            <tr><td>xp</td><td class="t">number</td><td>current XP</td></tr>
+            <tr><td>points</td><td class="t">number</td><td>unspent skill points</td></tr>
+            <tr><td>nextXp</td><td class="t">number</td><td>XP required for the next level</td></tr>
+          </table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>local s = exports['rklskilltree']:GetJobStats(src)
+print(s.level, s.xp .. '/' .. s.nextXp, s.points)</code></pre>
+        </div>
+
+        <div class="api srv" data-name="AddJobPoints">
+          <div class="head"><span class="fn">AddJobPoints(source, amount)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Grants skill points directly, without XP. Handy for rewards that should let a player unlock a node straight away.</p>
+          <table>
+            <tr><th>Parameter</th><th>Type</th><th>Notes</th></tr>
+            <tr><td>source</td><td class="t">number</td><td>player server id</td></tr>
+            <tr><td>amount</td><td class="t">number</td><td>points to add</td></tr>
+          </table>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>ok</td><td class="t">boolean</td><td><code>false</code> if the player isn't found</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>exports['rklskilltree']:AddJobPoints(src, 3)</code></pre>
+        </div>
+
+        <h3>Callbacks &amp; events</h3>
+        <table>
+          <tr><th>Name</th><th>Kind</th><th>Does</th></tr>
+          <tr><td>slv_skilltree:getJobTree</td><td>callback</td><td>Fetch the tree for the player's class, with unlock state</td></tr>
+          <tr><td>slv_skilltree:purchaseSkill</td><td>callback</td><td>Spend points to unlock or rank up a node (server-validated)</td></tr>
+          <tr><td>slv_skilltree:assignSkillSlot</td><td>callback</td><td>Put a skill into a HUD hotbar slot</td></tr>
+          <tr><td>slv_skilltree:saveAdminTree</td><td>callback</td><td>Save the tree from the admin editor</td></tr>
+          <tr><td>slv_skilltree:resetSystem</td><td>callback</td><td>Reset a player's unlocked skills</td></tr>
+          <tr><td>slv_skilltree:server:addXP</td><td>event</td><td>Add XP to a target player</td></tr>
+          <tr><td>slv_skilltree:server:setBaseClass</td><td>event</td><td>Set the player's base class</td></tr>
+          <tr><td>slv_skilltree:server:addSubClass / removeSubClass</td><td>event</td><td>Manage sub-classes</td></tr>
+        </table>
+
+        <h3>Commands</h3>
+        <table>
+          <tr><th>Command</th><th>Access</th><th>Does</th></tr>
+          <tr><td>/skilltree</td><td>player</td><td>Open the skill tree UI</td></tr>
+          <tr><td>/setclass</td><td>admin</td><td>Set a player's base class</td></tr>
+          <tr><td>/addsubclass · /removesubclass</td><td>admin</td><td>Manage sub-classes</td></tr>
+          <tr><td>/givejobxp</td><td>admin</td><td>Grant class XP (logged to <code>slv_admin_xp_logs</code>)</td></tr>
+          <tr><td>/giveawakeningstone</td><td>admin</td><td>Give an awakening stone</td></tr>
+          <tr><td>/copytree</td><td>admin</td><td>Copy a tree between classes</td></tr>
+        </table>
+
+        <h3>Config &amp; data</h3>
+        <p class="sub"><code>Config.XPTable</code> sets the XP curve per level; <code>Config.RankLimits</code> caps level by character rank (E, D, C…). Tables: <code>slv_player_job_points</code>, <code>slv_skill_trees</code>, <code>slv_skills</code>, <code>slv_player_skills</code>, plus the class columns on <code>users</code> / <code>players</code>.</p>
+
+        <div class="note info"><div class="h">Character table is auto-detected</div><p>Class, sub-classes and rank live on the character row — <code>users.identifier</code> on ESX Legacy, <code>players.citizenid</code> on QBCore/Qbox. The bridge resolves which to use at runtime, so the same code runs on all three. See <a href="#database">Database &amp; SQL</a> for the columns to add.</p></div>
+      </section>
+
+      <!-- ===================== BINDER ===================== -->
+      <section id="bd-binder">
+        <h2 class="res-h2"><span class="dot ui" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklbinder <span class="tag">card album</span></h2>
+        <p class="sub">A full-screen card binder. Players drag <code>forge_card</code> items out of their inventory into album pages, and drag them back out again. It reuses the forge's card item, so there's no extra item to register. Custom NUI, no ox_lib.</p>
+
+        <h3>Exports</h3>
+        <div class="api srv" data-name="GetBinderCount">
+          <div class="head"><span class="fn">GetBinderCount(src)</span><span class="badge srv">Server</span></div>
+          <p class="desc">How many cards the player currently has stored in their binder.</p>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>count</td><td class="t">number</td><td><code>0</code> if the player isn't found</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>local n = exports['rklbinder']:GetBinderCount(src)</code></pre>
+        </div>
+        <div class="api srv" data-name="GetBinder">
+          <div class="head"><span class="fn">GetBinder(src)</span><span class="badge srv">Server</span></div>
+          <p class="desc">The full binder contents as a raw table, keyed by slot index. Useful for collection rewards or "complete the album" checks.</p>
+          <table><tr><th>Returns</th><th>Type</th><th>Notes</th></tr><tr><td>binder</td><td class="t">table</td><td>empty table if nothing stored</td></tr></table>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>local binder = exports['rklbinder']:GetBinder(src)
+for slot, card in pairs(binder) do
+    print(slot, card.cardType, card.level)
+end</code></pre>
+        </div>
+
+        <h3>Events</h3>
+        <table>
+          <tr><th>Event</th><th>Args</th><th>Does</th></tr>
+          <tr><td>rklbinder:requestData</td><td>—</td><td>Open the binder (fired by the client on <code>/binder</code>)</td></tr>
+          <tr><td>rklbinder:store</td><td>invSlot, binderIndex</td><td>Bag → binder</td></tr>
+          <tr><td>rklbinder:retrieve</td><td>binderIndex</td><td>Binder → bag</td></tr>
+          <tr><td>rklbinder:move</td><td>fromIndex, toIndex</td><td>Move or swap inside the binder</td></tr>
+          <tr><td>rklbinder:reload</td><td>—</td><td>Request fresh data</td></tr>
+        </table>
+        <p class="sub">All of them are server-validated — slot range, card presence and free bag space are checked before anything is written.</p>
+
+        <h3>Config</h3>
+        <table>
+          <tr><th>Key</th><th>Purpose</th></tr>
+          <tr><td>Config.Command / Config.OpenKey</td><td>Open command (default <code>/binder</code>) and optional keybind</td></tr>
+          <tr><td>Config.CardItem</td><td>Item used as the card — default <code>forge_card</code>, same as the forge</td></tr>
+          <tr><td>Config.Layout</td><td>Binder size: <code>pages</code> (even), <code>cols</code>, <code>rows</code></td></tr>
+          <tr><td>Config.Rarity / Config.CardTypes</td><td>Frame colour by level, and card visuals + stat info</td></tr>
+          <tr><td>Config.BinderTable</td><td>Database table name</td></tr>
+        </table>
+
+        <div class="note info"><div class="h">Shares the forge's card item</div><p>Cards come from <code>rklforge</code> — <code>/giveforgecard</code> or <code>exports['rklforge']:GiveForgeCard(src, 'critical', 3)</code>. The binder is otherwise standalone: nothing else calls it, and it works without the forge if you hand out <code>forge_card</code> items another way.</p></div>
+        <div class="note warn"><div class="h">Table name stays sl_binder</div><p>The default <code>Config.BinderTable</code> is still <code>sl_binder</code> on purpose — it holds live player data, and renaming it would orphan every existing binder. On a fresh install you can rename the table in the database and update the setting to match; do both, or neither.</p></div>
+      </section>
+
+      <!-- ===================== REPAIR ===================== -->
+      <section id="rp-repair">
+        <h2 class="res-h2"><span class="dot ui" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklrepair <span class="tag">durability NPC</span></h2>
+        <p class="sub">Repair NPCs that restore durability on <code>equipment</code> items. Each NPC accepts certain categories and only lists gear below its damage threshold. No database, no exports — it works directly on ox_inventory metadata.</p>
+
+        <h3>How it meets rklequipment</h3>
+        <p>Both resources use the same ox_inventory item, <code>equipment</code>, and the same durability fields. Repairing writes <code>metadata.stats.durability</code> (the equipment system's source of truth) and mirrors it to <code>metadata.durability</code> so the ox_inventory bar agrees.</p>
+        <div class="note warn"><div class="h">Unequip before repairing</div><p>Equipping moves an item out of ox_inventory and into the <code>player_equipment</code> table, so equipped gear isn't in the bag at all. The repair list therefore only shows <b>unequipped</b> items: unequip → repair → equip again. The restored durability carries over on re-equip, so no refresh event is needed.</p></div>
+
+        <h3>Callbacks</h3>
+        <table>
+          <tr><th>Name</th><th>Side</th><th>Does</th></tr>
+          <tr><td>rklrepair:getAwakenCoins</td><td>server</td><td>Current balance, for the UI</td></tr>
+          <tr><td>rklrepair:processRepair</td><td>server</td><td>Recheck cost, take payment, set durability to 100</td></tr>
+        </table>
+        <p class="sub">Both are server-validated — the item is re-read server-side and the cost recomputed from config, so a tampered UI can't repair for free.</p>
+
+        <h3>Config</h3>
+        <table>
+          <tr><th>Key</th><th>Purpose</th></tr>
+          <tr><td>Config.NPCs</td><td>Locations, models, accepted categories, and <code>minDurabilityToRepair</code></td></tr>
+          <tr><td>Config.WeaponList</td><td>Per-weapon repair cost (materials + currency)</td></tr>
+          <tr><td>Config.DefaultRepair</td><td>Fallback cost for anything unlisted</td></tr>
+          <tr><td>Config.RKLCurrency</td><td>What the cost is paid with — item, money, bank or account</td></tr>
+        </table>
       </section>
 
       <!-- ===================== RECIPES ===================== -->
