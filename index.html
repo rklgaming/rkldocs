@@ -1465,7 +1465,7 @@ local curses = exports['rklhalloween']:GetActiveCurses() -- { 'pumpkin_head', ..
         <h4>Spirits never appear</h4>
         <p>OneSync must be enabled, and a player must be inside the zone (waves wait for one). Check the server console for <code>[rklhalloween]</code> errors.</p>
         <h4>Weather flickers inside the Haunted Night zone</h4>
-        <p>Your weather sync script is fighting the override. <code>qb-weathersync</code> and <code>Renewed-Weathersync</code> are paused automatically in <code>ClientHooks.OnHauntZone</code>. For other scripts, add their pause/resume event there, or set <code>Visuals.Weather = ''</code> and keep only the fog timecycle.</p>
+        <p>Your weather sync script is fighting the override. <code>qb-weathersync</code> and <code>Renewed-Weathersync</code> are paused automatically in <code>ClientHooks.OnHauntZone</code> (toggle with <code>Visuals.PauseWeatherSync</code>; the in-game clock is kept). For other scripts, add their pause/resume event there, or set <code>Visuals.Weather = ''</code> and keep only the fog timecycle.</p>
         <h4>Anticheat flags Swiftfoot or candy sprint</h4>
         <p>Lower <code>Config.Potions.hn_potion_swift.multiplier</code> (default 1.25) or whitelist <code>SetRunSprintMultiplierForPlayer</code> for this resource.</p>
         <h4>Leaderboard shows old players</h4>
