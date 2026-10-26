@@ -1419,7 +1419,7 @@ local curses = exports['rklhalloween']:GetActiveCurses() -- { 'pumpkin_head', ..
 
       <section id="hw-props">
         <h2>Hallowed Night — Custom props</h2>
-        <p class="sub">Nine custom models built in Blender and streamed from <code>stream/</code> with <code>stream/hn_props.ytyp</code> (registered via <code>data_file 'DLC_ITYP_REQUEST'</code>).</p>
+        <p class="sub">Nine custom models built in Blender (5k–30k vertices each) and streamed from <code>stream/</code> with <code>stream/hn_props.ytyp</code>, registered through the <code>data_file 'DLC_ITYP_REQUEST'</code> line in <code>fxmanifest.lua</code>. Keep that line commented out until the <code>.ydr</code> files and the ytyp are in <code>stream/</code>. <code>install/STREAM.md</code> explains the Sollumz export steps.</p>
         <table>
           <tr><th>Model</th><th>Used by</th><th>Fallback if missing</th></tr>
           <tr><td>hn_soul_lantern</td><td>Lantern hunt</td><td><code>prop_veg_crop_03_pump</code></td></tr>
@@ -1459,7 +1459,7 @@ local curses = exports['rklhalloween']:GetActiveCurses() -- { 'pumpkin_head', ..
         <h4>Nothing spawns / "The veil is closed"</h4>
         <p>The season is off. Check <code>Config.Season</code> dates (they use the server's local date), or set <code>AlwaysOn = true</code> for testing.</p>
         <h4>Props show as plain pumpkins or barrels</h4>
-        <p>The custom stream didn't load, so the fallback models are showing. Make sure <code>stream/</code> contains the <code>.ydr</code> files and <code>hn_props.ytyp</code>, and restart the server (not just the resource) after adding new streamed files.</p>
+        <p>The custom stream didn't load, so the fallback models are showing. Make sure <code>stream/</code> contains the <code>.ydr</code> files and <code>hn_props.ytyp</code>, the <code>data_file 'DLC_ITYP_REQUEST'</code> line in <code>fxmanifest.lua</code> is uncommented, and restart the server (not just the resource) after adding new streamed files.</p>
         <h4>Potions do nothing on ox_inventory</h4>
         <p>The item is missing <code>server = { export = 'rklhalloween.useItem' }</code>, or the folder was renamed.</p>
         <h4>Spirits never appear</h4>
