@@ -76,7 +76,7 @@
     color:var(--ink-3); padding:4px 8px; display:flex; align-items:center; gap:7px;
   }
   .nav-group > .label .dot{width:6px;height:6px;border-radius:50%}
-  .dot.eq{background:var(--steel)} .dot.fg{background:var(--ember)} .dot.cr{background:var(--arcane)} .dot.gn{background:var(--ink-3)} .dot.mg{background:#D86FD0} .dot.ef{background:#7FD957} .dot.ui{background:#E6B450}
+  .dot.eq{background:var(--steel)} .dot.fg{background:var(--ember)} .dot.cr{background:var(--arcane)} .dot.gn{background:var(--ink-3)} .dot.mg{background:#D86FD0} .dot.ef{background:#7FD957} .dot.ui{background:#E6B450} .dot.hw{background:#B57BFF}
   .nav-group a{
     display:block; color:var(--ink-2); font-size:13.5px; padding:6px 9px; border-radius:7px; line-height:1.35;
     border-left:2px solid transparent;
@@ -104,7 +104,7 @@
   .pill{display:flex; align-items:center; gap:9px; border:1px solid var(--line-2); background:var(--bg-2); border-radius:10px; padding:9px 14px; font-size:13.5px; color:var(--ink-2)}
   .pill b{color:var(--ink); font-weight:600}
   .pill .sq{width:9px;height:9px;border-radius:2px;transform:rotate(45deg)}
-  .sq.eq{background:var(--steel)} .sq.fg{background:var(--ember)} .sq.cr{background:var(--arcane)} .sq.mg{background:#D86FD0} .sq.ef{background:#7FD957} .sq.ui{background:#E6B450}
+  .sq.eq{background:var(--steel)} .sq.fg{background:var(--ember)} .sq.cr{background:var(--arcane)} .sq.mg{background:#D86FD0} .sq.ef{background:#7FD957} .sq.ui{background:#E6B450} .sq.hw{background:#B57BFF}
 
   /* ---------- Sections ---------- */
   section{scroll-margin-top:84px; padding-top:18px}
@@ -254,6 +254,18 @@
         <a href="#rp-repair">rklrepair</a>
       </div>
       <div class="nav-group">
+        <div class="label"><span class="dot hw"></span>Hallowed Night</div>
+        <a href="#hw-overview">Overview</a>
+        <a href="#hw-install">Install</a>
+        <a href="#hw-config">Config files</a>
+        <a href="#hw-features">Features &amp; balancing</a>
+        <a href="#hw-cmd">Commands &amp; keybinds</a>
+        <a href="#hw-exports">Exports, state &amp; hooks</a>
+        <a href="#hw-props">Custom props</a>
+        <a href="#hw-escrow">Tebex &amp; escrow</a>
+        <a href="#hw-trouble">Troubleshooting</a>
+      </div>
+      <div class="nav-group">
         <div class="label"><span class="dot gn"></span>Recipes</div>
         <a href="#recipes">Integration examples</a>
         <a href="#deploy">Hosting these docs</a>
@@ -268,7 +280,7 @@
 
       <!-- HERO -->
       <header class="hero">
-        <p class="eyebrow">Gear · Forge · Crafting · Magic</p>
+        <p class="eyebrow">Gear · Forge · Crafting · Magic · Seasonal</p>
         <h1>RKL Suite — Developer Docs</h1>
         <p class="lead">Connected FiveM resources for RPG servers: wearable gear with stats and durability, a forge for upgrades, enchants and sockets, an XP-based crafting system, and a full spell &amp; skill layer. Everything runs on ESX Legacy, QBCore and Qbox through auto-detecting bridges.</p>
         <div class="molten"></div>
@@ -279,6 +291,7 @@
           <span class="pill"><span class="sq mg"></span><b>spell system</b> — 5 magic resources</span>
           <span class="pill"><span class="sq ef"></span><b>effects &amp; FX</b> — status &amp; particles</span>
           <span class="pill"><span class="sq ui"></span><b>rklinterface</b> — HUD &amp; class build</span>
+          <span class="pill"><span class="sq hw"></span><b>rklhalloween</b> — Hallowed Night seasonal event</span>
         </div>
       </header>
 
@@ -1163,6 +1176,300 @@ end</code></pre>
           <tr><td>Config.DefaultRepair</td><td>Fallback cost for anything unlisted</td></tr>
           <tr><td>Config.RKLCurrency</td><td>What the cost is paid with — item, money, bank or account</td></tr>
         </table>
+      </section>
+
+      <!-- ===================== HALLOWED NIGHT ===================== -->
+      <section id="hw-overview">
+        <h2 class="res-h2"><span class="dot hw" style="width:11px;height:11px;border-radius:3px;transform:rotate(45deg)"></span>rklhalloween <span class="tag">seasonal event</span></h2>
+        <p class="sub"><b>Hallowed Night</b> is a free fantasy Halloween event pack in one resource: a soul-lantern hunt, trick-or-treat doors with curses, a witch's cauldron with ingredient gathering, and a scheduled <b>Haunted Night</b> boss event. Everything uses a custom Halloween UI (prompt, progress ring, toasts, Grimoire menu, cauldron, boss bar). It's standalone: no other RKL resource is needed.</p>
+        <table>
+          <tr><th>Feature</th><th>What players do</th><th>Config</th></tr>
+          <tr><td>Soul Lantern Hunt</td><td>Find glowing lanterns around the map, hold <code>E</code> to collect Souls + loot. Some lanterns are <b>cursed</b>: more Souls, plus a random curse.</td><td><span class="t">config/lanterns.lua</span></td></tr>
+          <tr><td>Trick-or-Treat</td><td>Knock on doors. A costumed NPC answers with a <b>Treat</b> (candy, ingredients, cash) or a <b>Trick</b> (curse).</td><td><span class="t">config/trickortreat.lua</span></td></tr>
+          <tr><td>Curses</td><td>8 fantasy curses with an on-screen timer. Lifted by death (optional) or the Purifying Elixir.</td><td><span class="t">config/curses.lua</span></td></tr>
+          <tr><td>Witch's Cauldron</td><td>Gather Mandrake, Moonpetal and Bone Dust, then brew 7 potions with a stirring skill-check.</td><td><span class="t">config/cauldron.lua</span> · <span class="t">gathering.lua</span> · <span class="t">potions.lua</span></td></tr>
+          <tr><td>Haunted Night</td><td>Fog and blood moon over a zone, 3 waves of spirits, then <b>The Hollow King</b> boss with Soul Nova and summons.</td><td><span class="t">config/haunted.lua</span></td></tr>
+          <tr><td>Grimoire</td><td><code>/halloween</code> (F7): profile, leaderboard, milestone rewards, recipe book, curse list, built-in satchel.</td><td><span class="t">config/config.lua</span></td></tr>
+        </table>
+        <div class="note info"><div class="h">Runs on every framework</div><p>Auto-detects <b>Qbox</b>, <b>QBCore</b>, <b>ESX Legacy</b> or <b>standalone</b>, plus <b>ox_inventory</b>, <b>qb-inventory</b> (and the ps/lj forks), the ESX default inventory, or a built-in Halloween Satchel when there's no inventory at all. Interaction works with the custom prompt, <b>ox_target</b> or <b>qb-target</b>. Progress is stored in server KVP, so <b>no SQL is needed</b>.</p></div>
+        <div class="note tip"><div class="h">Mabilisang gabay (Tagalog)</div><p>1) Ilagay ang folder na <code>rklhalloween</code> sa resources. 2) Idagdag ang <code>ensure rklhalloween</code> sa server.cfg, pagkatapos ng framework at inventory mo. 3) I-paste ang items mula sa <code>install/items</code> sa inventory mo, at i-copy ang images mula sa <code>install/images</code>. 4) I-restart ang server. Para makita ang menu, i-type ang <code>/halloween</code> o pindutin ang <b>F7</b>. Admin: <code>/hnhaunt start</code> para simulan ang Haunted Night.</p></div>
+      </section>
+
+      <section id="hw-install">
+        <h2>Hallowed Night — Install</h2>
+        <h4>Requirements</h4>
+        <ul>
+          <li><b>OneSync</b> (the Haunted Night spirits are created server-side)</li>
+          <li>One framework (or none for standalone) and one inventory (or none, so the built-in satchel is used)</li>
+          <li>Optional: <code>ox_target</code> or <code>qb-target</code></li>
+        </ul>
+        <h4>1. server.cfg</h4>
+        <pre><div class="bar"><span class="ttl">server.cfg</span><button class="copy">Copy</button></div><code># your framework + inventory first
+ensure qbx_core            # or qb-core / es_extended / nothing
+ensure ox_inventory        # or qb-inventory / nothing
+ensure ox_target           # optional
+
+ensure rklhalloween
+
+# admin commands (/hnhaunt, /hnsouls, /hnlanterns)
+add_ace group.admin hallowed.admin allow</code></pre>
+        <div class="note warn"><div class="h">Keep the folder name rklhalloween</div><p>ox_inventory calls <code>rklhalloween.useItem</code> when a potion is used, and the NUI talks to its own folder name. Renaming the folder breaks potion usage on ox_inventory.</p></div>
+
+        <h4>2. Items</h4>
+        <table>
+          <tr><th>Inventory</th><th>What to do</th></tr>
+          <tr><td>ox_inventory / Qbox</td><td>Paste <code>install/items/ox_inventory.lua</code> into <code>ox_inventory/data/items.lua</code></td></tr>
+          <tr><td>qb-inventory (QBCore)</td><td>Paste <code>install/items/qb-core.lua</code> into <code>qb-core/shared/items.lua</code></td></tr>
+          <tr><td>ESX default</td><td>Run <code>install/items/esx.sql</code></td></tr>
+          <tr><td>Standalone</td><td>Nothing to do. Items go to the Halloween Satchel tab in the Grimoire</td></tr>
+        </table>
+        <p>Potions use the server export, so ox_inventory removes the item and the pack runs the effect:</p>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">ox_inventory/data/items.lua</span><button class="copy">Copy</button></div><code>['hn_potion_seer'] = {
+    label = "Seer's Draught", weight = 150, stack = true, close = true,
+    description = "Reveals nearby soul lanterns on your map.",
+    server = { export = 'rklhalloween.useItem' },
+},</code></pre>
+        <h4>3. Images</h4>
+        <p>Copy <code>install/images/*.png</code> to <code>ox_inventory/web/images/</code> (or <code>qb-inventory/html/images/</code>). The Halloween UI has its own copy in <code>html/assets/items/</code>.</p>
+
+        <h4>4. Item list</h4>
+        <table>
+          <tr><th>Item</th><th>Label</th><th>From</th></tr>
+          <tr><td>hn_mandrake_root</td><td>Mandrake Root</td><td>Mandrake gathering nodes</td></tr>
+          <tr><td>hn_moonpetal</td><td>Moonpetal</td><td>Moonpetal nodes (night only), rare treat</td></tr>
+          <tr><td>hn_bone_dust</td><td>Bone Dust</td><td>Bone piles, cursed lanterns</td></tr>
+          <tr><td>hn_ghost_essence</td><td>Ghost Essence</td><td>Haunted Night spirits, Specter curse, cursed lanterns, boss</td></tr>
+          <tr><td>hn_pumpkin_seeds</td><td>Pumpkin Seeds</td><td>Lanterns, treats</td></tr>
+          <tr><td>hn_raven_feather</td><td>Raven Feather</td><td>Lanterns, treats</td></tr>
+          <tr><td>hn_candy</td><td>Hallowed Candy</td><td>Treats, lanterns, boss (usable: small heal + sugar rush)</td></tr>
+          <tr><td>hn_candy_bucket</td><td>Candy Bucket</td><td>Milestone reward (optional knock requirement)</td></tr>
+          <tr><td>hn_potion_*</td><td>7 potions</td><td>Witch's Cauldron (see recipes below)</td></tr>
+          <tr><td>hn_sludge</td><td>Cauldron Sludge</td><td>Failed brew (usable, but you'll regret it)</td></tr>
+        </table>
+      </section>
+
+      <section id="hw-config">
+        <h2>Hallowed Night — Config files</h2>
+        <p class="sub">Every file in <code>config/</code> stays editable after escrow. The main switches live in <code>config/config.lua</code>:</p>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">config/config.lua</span><button class="copy">Copy</button></div><code>Config.Locale = 'en'                 -- 'en' | 'tl'
+Config.Framework = 'auto'            -- 'auto' | 'qbx' | 'qb' | 'esx' | 'standalone'
+Config.Inventory = 'auto'            -- 'auto' | 'ox_inventory' | 'qb-inventory' | 'esx' | 'internal'
+Config.Interaction = 'prompt'        -- 'prompt' | 'ox_target' | 'qb-target' | 'auto'
+
+Config.Season = {
+    AlwaysOn = false,                -- true = ignore the dates
+    Start  = { month = 10, day = 15 },
+    Finish = { month = 11, day = 3 },
+    Id = '2026',                     -- change every year for a fresh leaderboard
+}</code></pre>
+        <table>
+          <tr><th>File</th><th>Controls</th></tr>
+          <tr><td>config.lua</td><td>Locale, framework/inventory/interaction mode, season dates, Grimoire command &amp; key, milestones, leaderboard size, admin ace &amp; command names, particle effects</td></tr>
+          <tr><td>items.lua</td><td>Labels &amp; descriptions shown in the UI</td></tr>
+          <tr><td>lanterns.lua</td><td>Mode, active count, respawn, cursed chance, loot tables, light colours, blips, spawn locations</td></tr>
+          <tr><td>trickortreat.lua</td><td>Doors (<code>vec4</code>), cooldowns, daily limit, trick chance, treat table, NPC models</td></tr>
+          <tr><td>curses.lua</td><td>Each curse: enabled, weight, duration, vehicle-safe, label/description, extra settings</td></tr>
+          <tr><td>cauldron.lua</td><td>Cauldron locations, witch NPC, minigame difficulty, fail result, recipes</td></tr>
+          <tr><td>gathering.lua</td><td>Gathering nodes: model, item, amount, time, respawn, night-only, points</td></tr>
+          <tr><td>potions.lua</td><td>What every usable item does (durations, multipliers, heal amounts)</td></tr>
+          <tr><td>haunted.lua</td><td>Schedule, zones, visuals, spirits, waves, boss, rewards</td></tr>
+        </table>
+        <h4>Milestones</h4>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">config/config.lua</span><button class="copy">Copy</button></div><code>Config.Milestones = {
+    { souls = 25,  label = 'Wandering Spirit', rewards = {
+        { type = 'item', name = 'hn_candy', amount = 5 },
+        { type = 'money', account = 'cash', amount = 500 },
+    } },
+    -- ...
+}</code></pre>
+        <div class="note tip"><div class="h">Add locations fast</div><p>Stand where you want a lantern, door, node or cauldron and type <code>/hncoords</code>. It copies <code>vec4(x, y, z, heading)</code> to your clipboard so you can paste it into the config. Lantern, node and prop heights snap to the ground automatically.</p></div>
+      </section>
+
+      <section id="hw-features">
+        <h2>Hallowed Night — Features &amp; balancing</h2>
+
+        <h3>Soul Lantern Hunt</h3>
+        <p><code>Mode = 'global'</code> keeps <code>ActiveCount</code> shared lanterns on the map. The first player to collect one wins it, and a new one appears elsewhere after <code>RespawnSeconds</code>. <code>Mode = 'personal'</code> turns every location into a collectible that each player can claim once per season.</p>
+        <table>
+          <tr><th>Key</th><th>Default</th><th>Notes</th></tr>
+          <tr><td>ActiveCount</td><td>20</td><td>Global mode only</td></tr>
+          <tr><td>RespawnSeconds</td><td>240</td><td>Delay before a collected lantern reappears somewhere else</td></tr>
+          <tr><td>CursedChance</td><td>0.15</td><td>Cursed = more Souls + <code>CursedLoot</code> + a random curse</td></tr>
+          <tr><td>CursedLooksDifferent</td><td>true</td><td><code>false</code> hides which lanterns are cursed</td></tr>
+          <tr><td>Loot / CursedLoot</td><td>—</td><td>Each entry rolls separately: <code>{ chance, item | money, min, max }</code></td></tr>
+          <tr><td>Blips.Enabled</td><td>false</td><td>Shows every lantern on the map (easy mode)</td></tr>
+        </table>
+        <p class="sub">Anti-exploit: the server starts a timed action when the player begins holding <code>E</code> and only pays out if the full hold time passed, the player is still close, and the lantern still exists.</p>
+
+        <h3>Trick-or-Treat</h3>
+        <p>Each door is a <code>vec4</code>, and the heading is the direction the NPC faces. The included doors are samples, so add your own with <code>/hncoords</code>. Per-door cooldown and a daily limit stop farming.</p>
+        <table>
+          <tr><th>Key</th><th>Default</th><th>Notes</th></tr>
+          <tr><td>TrickChance</td><td>0.30</td><td>Trick = curse + <code>Souls.trick</code></td></tr>
+          <tr><td>DoorCooldown</td><td>1800</td><td>Seconds, per player per door</td></tr>
+          <tr><td>DailyLimit</td><td>40</td><td>Knocks per real day per player (0 = unlimited)</td></tr>
+          <tr><td>RequireItem</td><td>false</td><td><code>true</code> = players need <code>hn_candy_bucket</code></td></tr>
+          <tr><td>Treats</td><td>—</td><td>Weighted pick: <code>{ weight, item | money, min, max }</code></td></tr>
+        </table>
+
+        <h3>Curses</h3>
+        <table>
+          <tr><th>Curse</th><th>Effect</th><th>Time</th></tr>
+          <tr><td>levitate</td><td>Lifts the player into the air, then lowers them gently</td><td>12s</td></tr>
+          <tr><td>haunted_sight</td><td>Clown-vision screen effect + spectral vignette</td><td>25s</td></tr>
+          <tr><td>drunken_hex</td><td>Drunk walk + camera sway</td><td>30s</td></tr>
+          <tr><td>specter</td><td>A ghost hunts the player. Kill it for Ghost Essence (server-verified token)</td><td>40s</td></tr>
+          <tr><td>pumpkin_head</td><td>Pumpkin helmet that everyone nearby can see (synced through a player state bag, so it works with entity lockdown)</td><td>60s</td></tr>
+          <tr><td>heavy_bones</td><td>Slow walk, no sprint or jump</td><td>30s</td></tr>
+          <tr><td>clumsy</td><td>Random trips (ragdoll)</td><td>25s</td></tr>
+          <tr><td>blackout</td><td>Darkness closes in on the screen</td><td>20s</td></tr>
+        </table>
+        <p class="sub">Only one curse at a time, followed by <code>Config.CurseImmunityAfterCurse</code> seconds of immunity. Curses flagged <code>vehicle = false</code> never land on players who are driving. The <b>Purifying Elixir</b> lifts all curses and grants immunity.</p>
+
+        <h3>Witch's Cauldron &amp; gathering</h3>
+        <table>
+          <tr><th>Potion</th><th>Ingredients</th><th>Effect</th></tr>
+          <tr><td>hn_potion_owl</td><td>2 Moonpetal · 1 Raven Feather</td><td>Night vision, 90s</td></tr>
+          <tr><td>hn_potion_swift</td><td>2 Pumpkin Seeds · 1 Raven Feather</td><td>Sprint ×1.25, 60s</td></tr>
+          <tr><td>hn_potion_feather</td><td>2 Raven Feather · 1 Moonpetal</td><td>Slow fall, no fall damage, 120s</td></tr>
+          <tr><td>hn_potion_vigor</td><td>2 Mandrake Root · 1 Pumpkin Seeds</td><td>+60 health, +25 armour</td></tr>
+          <tr><td>hn_potion_purify</td><td>Moonpetal · Mandrake Root · Ghost Essence</td><td>Lift curses + 180s immunity</td></tr>
+          <tr><td>hn_potion_seer</td><td>Ghost Essence · Bone Dust · Moonpetal</td><td>Reveals lanterns within 400m for 90s</td></tr>
+          <tr><td>hn_potion_phantom</td><td>2 Ghost Essence · 1 Bone Dust</td><td>Ghost form (translucent, no collision, weapons disabled), 30s</td></tr>
+        </table>
+        <p>Brewing opens the cauldron UI. With <code>Minigame.Enabled</code>, players stir by pressing <b>SPACE</b> when the marker is in the glowing zone. <code>Rounds</code>, <code>Speed</code>, <code>ZoneSize</code> and <code>MaxMisses</code> set the difficulty. A failed brew gives <code>Fail.Item</code> (sludge) and, if <code>Fail.LoseIngredients</code> is on, uses up the ingredients.</p>
+        <p>Gathering nodes are shared: once someone gathers one it disappears for everyone until <code>respawn</code> seconds pass. Moonpetal is <code>nightOnly</code> (20:00–06:00 in-game).</p>
+
+        <h3>Haunted Night</h3>
+        <ol>
+          <li><b>Announce</b>: a banner for everyone, plus a flashing blip and radius on the map for <code>AnnounceSeconds</code>.</li>
+          <li><b>Waves</b>: spirits spawn inside the zone. Each kill pays Souls and has a chance at Ghost Essence. The next wave starts <code>WaveDelay</code> seconds after the last spirit falls.</li>
+          <li><b>Boss</b>: <i>The Hollow King</i> (pumpkin head, battle axe) with a boss bar. A <b>Soul Nova</b> knocks back nearby players every <code>Nova.interval</code> seconds, and he summons spirits at 66% and 33% health. His HP grows with each extra participant, up to <b>8000</b> (GTA syncs ped health in 13 bits, so higher values would break).</li>
+          <li><b>Victory</b>: every participant still near the zone gets <code>Rewards.Boss</code>. If <code>TimeLimit</code> runs out first, the spirits retreat.</li>
+        </ol>
+        <p>Start it on a schedule (<code>Schedule</code>, real server time) or with <code>/hnhaunt start [zone]</code>. Inside the zone, players get a client-side <code>HALLOWEEN</code> weather override, a fog timecycle and decorative tombstones.</p>
+        <div class="note info"><div class="h">Works with entity lockdown</div><p>Spirits are created by the <b>server</b>. One player inside the zone (the "host") only sends back ground positions so nothing spawns underground, and whoever owns each spirit runs its AI. Waves wait until at least one player is inside the zone.</p></div>
+      </section>
+
+      <section id="hw-cmd">
+        <h2>Hallowed Night — Commands &amp; keybinds</h2>
+        <table>
+          <tr><th>Command</th><th>Who</th><th>Does</th></tr>
+          <tr><td>/halloween</td><td>everyone</td><td>Open the Grimoire. Default key <b>F7</b> (players can rebind it in Settings → Key Bindings → FiveM)</td></tr>
+          <tr><td>/hnhaunt start [zone]</td><td>admin</td><td>Start Haunted Night in zone N (random if empty)</td></tr>
+          <tr><td>/hnhaunt stop</td><td>admin</td><td>Stop it and delete all spirits</td></tr>
+          <tr><td>/hnsouls [id] [amount]</td><td>admin</td><td>Give (or remove, if negative) Souls</td></tr>
+          <tr><td>/hnlanterns respawn</td><td>admin</td><td>Respawn every lantern</td></tr>
+          <tr><td>/hncoords</td><td>everyone</td><td>Copy your position as <code>vec4(...)</code></td></tr>
+        </table>
+        <p class="sub">Admin = <code>add_ace group.admin hallowed.admin allow</code>. Every command name can be changed in <code>Config.Admin.Commands</code>. All admin commands also work from the server console.</p>
+      </section>
+
+      <section id="hw-exports">
+        <h2>Hallowed Night — Exports, state &amp; hooks</h2>
+        <div class="api srv" data-name="AddSouls">
+          <div class="head"><span class="fn">AddSouls(src, amount, reason)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Give (or remove) Souls from another script. Returns the new total.</p>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>exports['rklhalloween']:AddSouls(src, 5, 'quest_complete')</code></pre>
+        </div>
+        <div class="api srv" data-name="GetSouls">
+          <div class="head"><span class="fn">GetSouls(src) · GetStats(src)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Current Souls, and the stats table (<code>lanterns, cursed, treats, tricks, brews, gathered, spirits, bosses</code>).</p>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>local souls = exports['rklhalloween']:GetSouls(src)
+local stats = exports['rklhalloween']:GetStats(src)</code></pre>
+        </div>
+        <div class="api srv" data-name="ApplyCurse">
+          <div class="head"><span class="fn">ApplyCurse(src)</span><span class="badge srv">Server</span></div>
+          <p class="desc">Puts a random enabled curse on a player (respects immunity and vehicle rules). Returns the curse name, or <code>nil</code> if it was resisted.</p>
+        </div>
+        <div class="api srv" data-name="StartHaunt">
+          <div class="head"><span class="fn">StartHaunt(zone) · StopHaunt() · GetHauntState()</span><span class="badge srv">Server</span></div>
+          <p class="desc">Control Haunted Night from your own event scheduler. <code>StartHaunt</code>/<code>StopHaunt</code> return <code>ok, message</code>.</p>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">server</span><button class="copy">Copy</button></div><code>local ok, msg = exports['rklhalloween']:StartHaunt(2)
+print(exports['rklhalloween']:GetHauntState().status) -- idle | announce | active | boss | ended</code></pre>
+        </div>
+        <div class="api cli" data-name="OpenGrimoire">
+          <div class="head"><span class="fn">OpenGrimoire() · GetActiveCurses()</span><span class="badge cli">Client</span></div>
+          <p class="desc">Open the Grimoire from a radial menu or phone app, or read the active curse names (for example, to block your phone while the player is cursed).</p>
+          <pre data-lang="lua"><div class="bar"><span class="ttl">client</span><button class="copy">Copy</button></div><code>exports['rklhalloween']:OpenGrimoire()
+local curses = exports['rklhalloween']:GetActiveCurses() -- { 'pumpkin_head', ... }</code></pre>
+        </div>
+
+        <h3>State bags</h3>
+        <table>
+          <tr><th>Key</th><th>Value</th></tr>
+          <tr><td>GlobalState.hnSeason</td><td><code>true</code> while the season is active</td></tr>
+          <tr><td>GlobalState.hnHaunt</td><td><code>{ status, zone, label, center, radius, wave, waves, endsAt }</code></td></tr>
+        </table>
+
+        <h3>Hooks (editable)</h3>
+        <table>
+          <tr><th>Function</th><th>File</th><th>Use it to</th></tr>
+          <tr><td>Hooks.CanParticipate(src)</td><td>editable/server/hooks.lua</td><td>Block jailed or on-duty players</td></tr>
+          <tr><td>Hooks.Log(src, action, details)</td><td>editable/server/hooks.lua</td><td>Logs. Set <code>Hooks.Webhook</code> for Discord</td></tr>
+          <tr><td>Hooks.OnSoulsChanged(...)</td><td>editable/server/hooks.lua</td><td>Mirror Souls into your own systems</td></tr>
+          <tr><td>Hooks.OnBossDefeated(list)</td><td>editable/server/hooks.lua</td><td>Extra rewards / announcements</td></tr>
+          <tr><td>Hooks.StandaloneAddMoney(...)</td><td>editable/server/hooks.lua</td><td>Pay money on a custom framework</td></tr>
+          <tr><td>ClientHooks.CanInteract()</td><td>editable/client/hooks.lua</td><td>Block interactions (cuffed, phone, etc.)</td></tr>
+          <tr><td>ClientHooks.Notify(data)</td><td>editable/client/hooks.lua</td><td>Route notifications to your own notify script</td></tr>
+          <tr><td>ClientHooks.OnHauntZone(entered)</td><td>editable/client/hooks.lua</td><td>Pause/resume your weather sync while inside the Haunted Night zone (qb-weathersync and Renewed-Weathersync are handled by default)</td></tr>
+        </table>
+        <p class="sub">Need a custom framework? Everything the pack asks from the server goes through <code>bridge/server.lua</code> (identifier, name, money, items, usable items) and <code>bridge/client.lua</code> (death check, player loaded, target). Both stay open.</p>
+      </section>
+
+      <section id="hw-props">
+        <h2>Hallowed Night — Custom props</h2>
+        <p class="sub">Nine custom models built in Blender and streamed from <code>stream/</code> with <code>stream/hn_props.ytyp</code> (registered via <code>data_file 'DLC_ITYP_REQUEST'</code>).</p>
+        <table>
+          <tr><th>Model</th><th>Used by</th><th>Fallback if missing</th></tr>
+          <tr><td>hn_soul_lantern</td><td>Lantern hunt</td><td><code>prop_veg_crop_03_pump</code></td></tr>
+          <tr><td>hn_cursed_lantern</td><td>Cursed lanterns</td><td><code>prop_veg_crop_03_pump</code></td></tr>
+          <tr><td>hn_pumpkin_head</td><td>Pumpkin Head curse, Hollow King</td><td><code>prop_veg_crop_03_pump</code></td></tr>
+          <tr><td>hn_cauldron</td><td>Witch's Cauldron</td><td><code>prop_barrel_01a</code></td></tr>
+          <tr><td>hn_candy_bucket</td><td>Trick-or-treat NPC</td><td>no bucket</td></tr>
+          <tr><td>hn_tombstone</td><td>Haunted Night decoration</td><td><code>prop_gravestones_01a</code></td></tr>
+          <tr><td>hn_mandrake</td><td>Mandrake node</td><td><code>prop_plant_01a</code></td></tr>
+          <tr><td>hn_moonpetal</td><td>Moonpetal node</td><td><code>prop_plant_01b</code></td></tr>
+          <tr><td>hn_bone_pile</td><td>Bone node</td><td><code>prop_rub_binbag_01</code></td></tr>
+        </table>
+        <div class="note info"><div class="h">Fallbacks keep the script working</div><p>If a custom model can't load (stream folder missing, ytyp not registered), the pack automatically uses the vanilla fallback in each config, so nothing breaks while you fix the stream.</p></div>
+      </section>
+
+      <section id="hw-escrow">
+        <h2>Hallowed Night — Tebex &amp; escrow</h2>
+        <p>The manifest is escrow-ready (<code>lua54 'yes'</code>). These paths stay readable and editable for buyers:</p>
+        <pre data-lang="lua"><div class="bar"><span class="ttl">fxmanifest.lua</span><button class="copy">Copy</button></div><code>escrow_ignore {
+    'config/*.lua',
+    'locales/*.lua',
+    'bridge/*.lua',
+    'editable/**/*.lua',
+    'install/**/*',
+}</code></pre>
+        <p class="sub">The gameplay code (<code>client/</code>, <code>server/</code>, <code>shared/</code>) is encrypted. HTML/CSS/JS are never encrypted by asset escrow, so the UI is always editable. Streamed models are protected by escrow automatically.</p>
+        <ol>
+          <li>Zip the <code>rklhalloween</code> folder.</li>
+          <li>Upload it at <b>keymaster.fivem.net → Asset Escrow → Upload</b>.</li>
+          <li>Create a Tebex package (price 0 for a free release) and link the escrowed asset.</li>
+          <li>Players claim it on Tebex and download it from their keymaster <b>Granted Assets</b>.</li>
+        </ol>
+      </section>
+
+      <section id="hw-trouble">
+        <h2>Hallowed Night — Troubleshooting</h2>
+        <h4>Nothing spawns / "The veil is closed"</h4>
+        <p>The season is off. Check <code>Config.Season</code> dates (they use the server's local date), or set <code>AlwaysOn = true</code> for testing.</p>
+        <h4>Props show as plain pumpkins or barrels</h4>
+        <p>The custom stream didn't load, so the fallback models are showing. Make sure <code>stream/</code> contains the <code>.ydr</code> files and <code>hn_props.ytyp</code>, and restart the server (not just the resource) after adding new streamed files.</p>
+        <h4>Potions do nothing on ox_inventory</h4>
+        <p>The item is missing <code>server = { export = 'rklhalloween.useItem' }</code>, or the folder was renamed.</p>
+        <h4>Spirits never appear</h4>
+        <p>OneSync must be enabled, and a player must be inside the zone (waves wait for one). Check the server console for <code>[rklhalloween]</code> errors.</p>
+        <h4>Weather flickers inside the Haunted Night zone</h4>
+        <p>Your weather sync script is fighting the override. <code>qb-weathersync</code> and <code>Renewed-Weathersync</code> are paused automatically in <code>ClientHooks.OnHauntZone</code>. For other scripts, add their pause/resume event there, or set <code>Visuals.Weather = ''</code> and keep only the fog timecycle.</p>
+        <h4>Anticheat flags Swiftfoot or candy sprint</h4>
+        <p>Lower <code>Config.Potions.hn_potion_swift.multiplier</code> (default 1.25) or whitelist <code>SetRunSprintMultiplierForPlayer</code> for this resource.</p>
+        <h4>Leaderboard shows old players</h4>
+        <p>Change <code>Config.Season.Id</code> to start a fresh season. Old progress stays in KVP under the old id.</p>
       </section>
 
       <!-- ===================== RECIPES ===================== -->
